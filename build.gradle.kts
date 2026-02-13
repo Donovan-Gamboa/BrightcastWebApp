@@ -24,19 +24,3 @@ dependencies {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
-
-
-tasks.register<Exec>("buildAngular") {
-    workingDir = file("${project.projectDir}/brightcast-web")
-    commandLine(if (System.getProperty("os.name").lowercase().contains("win")) "ng.cmd" else "ng", "build")
-}
-
-tasks.register<Copy>("copyFrontend") {
-    dependsOn("buildAngular")
-    from("${project.projectDir}/brightcast-web/dist/brightcast-web/browser")
-    into("${project.projectDir}/src/main/resources/static")
-}
-
-tasks.named("bootJar") {
-    dependsOn("copyFrontend")
-}
