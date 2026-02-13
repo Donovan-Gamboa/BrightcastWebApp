@@ -84,6 +84,9 @@ export class App implements OnInit {
   }
 
   isLockedOut(index: number): boolean {
+    if (this.targetingState === 'OWN_HAND') {
+      return false;
+    }
     return this.targetingState !== 'NONE' && this.selectedHandIndex !== index;
   }
 
