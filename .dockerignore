@@ -1,0 +1,6 @@
+.gradle
+.idea
+build
+!build/libs/*.jar
+node_modules
+brightcast-web/node_modules

@@ -1,5 +1,67 @@
 <div class="game-container">
 
+  <div style="position: absolute; top: 10px; right: 10px; z-index: 100;">
+    <button (click)="toggleRules()" style="background: rgba(255,255,255,0.2); border: 1px solid gold; color: gold; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+      📜 How to Play?
+    </button>
+  </div>
+
+  <div *ngIf="showRules" class="modal-overlay" (click)="toggleRules()">
+    <div class="modal-content" (click)="$event.stopPropagation()" style="max-width: 700px; border-color: gold;">
+      <button class="modal-close" (click)="toggleRules()">×</button>
+      <h2 style="color: #f1c40f; text-align: center; border-bottom: 1px solid #555; padding-bottom: 10px; margin-top: 0;">OFFICIAL RULES</h2>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+        <div>
+          <h3 style="color: #3498db; border-bottom: 1px solid #444;">🏆 Winning Conditions</h3>
+          <ul class="rules-list" style="padding-left: 20px; font-size: 0.9rem;">
+            [cite_start]<li><strong>Diversity:</strong> Collect 5 Spellcasters with <em style="color:#e74c3c">different</em> names [cite: 13-14].</li>
+            [cite_start]<li><strong>Unity:</strong> Collect 5 Spellcasters with the <em style="color:#e74c3c">same</em> name [cite: 20-21].</li>
+            <li><em>First to win 2 games takes the match!</em></li>
+          </ul>
+
+          <h3 style="color: #3498db; border-bottom: 1px solid #444;">⚔️ Turn Order</h3>
+          <ol class="rules-list" style="padding-left: 20px; font-size: 0.9rem;">
+            <li><strong>Draw Phase:</strong> Draw 1 card.</li>
+            <li><strong>Action Phase:</strong> Play 1 card & perform action.
+              <ul style="margin-top:5px; color:#aaa;">
+                <li>Spellcasters stay in play.</li>
+                <li>Monsters (Dragon) are discarded.</li>
+              </ul>
+            </li>
+            [cite_start]<li style="margin-top: 5px;"><strong>OPTIONAL SKIP:</strong> Instead of playing, Draw 1 extra card and end turn [cite: 65-66].</li>
+          </ol>
+          <p style="font-size: 0.8rem; color: #f39c12;">*Hand Limit: 8 Cards (Discard excess at end of turn)</p>
+        </div>
+
+        <div>
+          <h3 style="color: #e74c3c; border-bottom: 1px solid #444;">⚡ The "Stop" (Interrupt)</h3>
+          <p style="font-size: 0.9rem;">Stop an opponent's card <strong>as they play it!</strong></p>
+          <div style="background: rgba(231, 76, 60, 0.2); padding: 10px; border-radius: 5px; font-size: 0.85rem;">
+            [cite_start]<strong>Cost:</strong> Discard a <strong style="color: #3498db">Wizard</strong> + a <strong style="color: white">Matching Copy</strong> of their card[cite: 164].<br>
+            <strong>Result:</strong> Their card is negated and discarded.
+          </div>
+
+          <h3 style="color: #2ecc71; border-bottom: 1px solid #444;">🃏 Card Abilities</h3>
+          <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 5px;">
+            [cite_start]<div><strong style="color: #2ecc71;">DRUID:</strong> Look at enemy hand, discard 1 choice[cite: 138].</div>
+            [cite_start]<div><strong style="color: #f1c40f;">SAGE:</strong> Draw 2, Discard 1[cite: 153].</div>
+            [cite_start]<div><strong style="color: #9b59b6;">WARLOCK:</strong> Return 1 Spellcaster from grave (No Monsters)[cite: 155].</div>
+            <div><strong style="color: #e74c3c;">SORCERER:</strong> Destroy 1 enemy card in play.</div>
+            <div><strong style="color: #3498db;">WIZARD:</strong> Draw 1 OR use for Interrupt.</div>
+            <div><strong style="color: #e67e22;">DRAGON:</strong> Destroy up to 3 enemy cards.</div>
+            [cite_start]<div><strong style="color: #fff;">ALCHEMIST:</strong> Copies a Spellcaster you have in play[cite: 172].</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 20px;">
+        <button (click)="toggleRules()" style="background: #27ae60; color: white; padding: 10px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem;">Let's Play!</button>
+      </div>
+    </div>
+  </div>
+
   <div *ngIf="viewingGraveyard && me" class="modal-overlay">
     <div class="modal-content">
       <h2>Your Discard Pile</h2>
@@ -81,112 +143,109 @@
 
   <div *ngIf="gameState && me && opponent" class="board">
 
-    <div class="opponent-area" [class.active-turn]="!isMyTurn">
-      <h3>Opponent: {{ opponent.name }}</h3>
-      <div class="hand-back">
-        <div class="card" *ngFor="let c of [].constructor(opponent.handSize)">
-          <img src="assets/cards/BACK_OPPONENT.jpg" class="card-img" style="border: 1px solid #aaa;">
+    <div class="player-zone top" [class.active-turn]="!isMyTurn">
+
+      <div class="side-panel">
+        <h3 style="color: #e74c3c; margin-bottom: 5px; font-size: 0.8rem;">DISCARD</h3>
+        <div class="deck" (click)="viewingEnemyHand = true" style="cursor: pointer;">
+          <ng-container *ngIf="getTopDiscard(opponent) as topCard; else emptyOppDiscard">
+            <img [src]="'assets/cards/' + topCard + '.jpg'" class="card-img">
+          </ng-container>
+          <ng-template #emptyOppDiscard>
+            <div style="border: 2px dashed #555; width: 100%; height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #555;">EMPTY</div>
+          </ng-template>
         </div>
       </div>
-      <div class="field">
-        <div class="card-stack-group" *ngFor="let stack of getStackedBoard(opponent)">
-          <div class="card stacked-card"
-               *ngFor="let cardWrapper of stack.cards; let i = index"
-               [style.marginTop.px]="i * 25" [style.zIndex]="i"
-               [class.targetable]="targetingState === 'ENEMY_BOARD'"
-               [class.marked-for-death]="selectedTargets.includes(cardWrapper.originalIndex)"
-               (click)="onOpponentBoardClick(cardWrapper.originalIndex)">
-            <img [src]="'assets/cards/' + cardWrapper.instance.currentCard + '.jpg'" class="card-img">
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <div class="center-info" style="height: auto; min-height: 120px;">
-      <div [class.your-turn]="isMyTurn" style="margin-top: 5px; font-size: 1.5rem;">
-        {{ isMyTurn ? "YOUR TURN" : "OPPONENT'S TURN" }}
-      </div>
-      <div style="height: 80px; width: 400px; background: rgba(0,0,0,0.6); overflow-y: auto; text-align: left; padding: 10px; border-radius: 8px; font-size: 0.8rem; border: 1px solid #555; margin-top: 5px;">
-        <div *ngFor="let log of gameState.logs" style="margin-bottom: 2px; color: #bdc3c7;">
-          > {{ log }}
-        </div>
-      </div>
-    </div>
+      <div class="center-panel">
+        <h3 style="margin: 0 0 10px 0;">{{ opponent.name }}</h3>
 
-    <div class="player-area" [class.active-turn]="isMyTurn">
-      <div class="action-bar" style="display: flex; gap: 40px; margin-bottom: 10px; align-items: flex-start;">
-
-        <div style="display: flex; gap: 15px;">
-          <div class="deck" (click)="toggleGraveyard()" style="cursor: pointer; position: relative;">
-            <ng-container *ngIf="getTopDiscard(me) as topCard; else emptyDiscard">
-              <img [src]="'assets/cards/' + topCard + '.jpg'" class="card-img">
-            </ng-container>
-            <ng-template #emptyDiscard>
-              <img src="assets/cards/BACK_MINE.jpg" class="card-img" style="filter: grayscale(100%) opacity(0.5);">
-              <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-weight: bold; font-size: 0.8rem;">EMPTY</div>
-            </ng-template>
-          </div>
-
-          <div class="deck" (click)="drawCard()" [class.playable]="isMyTurn && gameState.turnPhase === 'DRAW' && targetingState === 'NONE'">
-            <img src="assets/cards/BACK_MINE.jpg" class="card-img" style="border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
-            <div *ngIf="isMyTurn && gameState.turnPhase === 'DRAW'" style="position: absolute; width: 100%; text-align: center; top: -25px; color: #2ecc71; font-weight: bold; font-size: 0.8rem; animation: pulse 1s infinite;">DRAW!</div>
-          </div>
-
-          <div *ngIf="isMyTurn && gameState.turnPhase === 'MAIN'"
-               class="deck"
-               (click)="skipTurn()"
-               style="cursor: pointer; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); border-radius: 8px; border: 2px dashed #e74c3c;">
-            <div style="text-align: center; color: #e74c3c; font-weight: bold; font-size: 0.8rem;">
-              SKIP<br>&<br>DRAW
-            </div>
+        <div class="opponent-hand" style="display: flex; gap: 5px;">
+          <div class="card" *ngFor="let c of [].constructor(opponent.handSize)" style="width: 60px; height: 85px;">
+            <img src="assets/cards/BACK_OPPONENT.jpg" class="card-img">
           </div>
         </div>
 
-        <div class="field" style="margin-left: 20px; padding-top: 0;">
-          <div class="card-stack-group" *ngFor="let stack of getStackedBoard(me)">
+        <div class="field">
+          <div class="card-stack-group" *ngFor="let stack of getStackedBoard(opponent)">
             <div class="card stacked-card"
                  *ngFor="let cardWrapper of stack.cards; let i = index"
-                 [style.marginTop.px]="i * 25" [style.zIndex]="i"
-                 [class.targetable]="targetingState === 'OWN_BOARD'"
-                 (click)="onOwnBoardClick(cardWrapper.originalIndex)">
+                 [style.marginTop.px]="i * 12"
+                 [style.zIndex]="i"
+                 [class.targetable]="targetingState === 'ENEMY_BOARD'"
+                 (click)="onOpponentBoardClick(cardWrapper.originalIndex)">
               <img [src]="'assets/cards/' + cardWrapper.instance.currentCard + '.jpg'" class="card-img">
             </div>
           </div>
         </div>
       </div>
 
-      <h3>You: {{ me.name }}</h3>
+      <div class="side-panel"></div>
+    </div>
 
-      <div class="hand">
-        <div class="card"
-             [class.playable]="isMyTurn && gameState.turnPhase === 'MAIN' && targetingState === 'NONE'"
-             [class.targetable]="targetingState === 'OWN_HAND'"
-             [class.selected]="i === selectedHandIndex"
-             [style.opacity]="(isMyTurn && gameState.turnPhase === 'DRAW') ? '0.5' : '1'"
-             *ngFor="let card of me.hand; let i = index"
-             (click)="onHandClick(i)">
-          <img [src]="'assets/cards/' + card + '.jpg'" class="card-img" alt="{{ card }}">
-        </div>
+
+    <div class="center-info">
+      <div *ngIf="isMyTurn" style="color: #f1c40f; font-size: 1.5rem; font-weight: bold; letter-spacing: 2px;">YOUR TURN</div>
+      <div *ngIf="!isMyTurn" style="color: #95a5a6;">OPPONENT'S TURN</div>
+
+      <div style="position: absolute; right: 20px; width: 250px; height: 50px; overflow-y: scroll; font-size: 0.7rem; background: rgba(0,0,0,0.5); padding: 5px; text-align: left;">
+        <div *ngFor="let log of gameState.logs">{{ log }}</div>
       </div>
     </div>
 
-    <div *ngIf="gameState.status === 'FINISHED'" class="modal-overlay">
-      <div class="modal-content" style="border-color: #f1c40f; background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);">
-        <h1 style="font-size: 4rem; margin: 0; color: #f1c40f; text-shadow: 0 0 20px rgba(241, 196, 15, 0.5);">
-          {{ gameState.winnerName === playerName ? 'VICTORY!' : 'DEFEAT' }}
-        </h1>
-        <p style="font-size: 1.5rem; margin: 20px 0; color: #ecf0f1;">
-          <strong>{{ gameState.winnerName }}</strong> has won the match!
-        </p>
-        <div style="margin: 20px 0;">
-          <img src="assets/cards/SAGE.jpg" style="width: 120px; border-radius: 10px; border: 3px solid #f1c40f; box-shadow: 0 0 30px rgba(241, 196, 15, 0.3);">
+
+    <div class="player-zone bottom" [class.active-turn]="isMyTurn">
+
+      <div class="side-panel">
+        <div class="deck" (click)="toggleGraveyard()">
+          <ng-container *ngIf="getTopDiscard(me) as topCard; else emptyMyDiscard">
+            <img [src]="'assets/cards/' + topCard + '.jpg'" class="card-img">
+          </ng-container>
+          <ng-template #emptyMyDiscard>
+            <div style="border: 2px dashed #555; width: 100%; height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #555;">EMPTY</div>
+          </ng-template>
         </div>
-        <div style="display: flex; gap: 20px; justify-content: center;">
-          <button (click)="leaveGame()" style="background: #e67e22; padding: 15px 30px; font-size: 1.2rem;">
-            BACK TO LOBBY
-          </button>
+        <span style="font-size: 0.7rem;">DISCARD</span>
+
+        <div class="deck" (click)="drawCard()" [class.playable]="isMyTurn && gameState.turnPhase === 'DRAW'">
+          <img src="assets/cards/BACK_MINE.jpg" class="card-img">
+          <div *ngIf="isMyTurn && gameState.turnPhase === 'DRAW'" style="position: absolute; color: #2ecc71; font-weight: bold; background: rgba(0,0,0,0.8); padding: 2px 5px; border-radius: 4px;">DRAW</div>
+        </div>
+
+        <button *ngIf="isMyTurn && gameState.turnPhase === 'MAIN'" (click)="skipTurn()" style="font-size: 0.7rem; padding: 5px; background: #c0392b;">SKIP TURN</button>
+      </div>
+
+      <div class="center-panel">
+
+        <div class="field" style="align-items: flex-end;">
+          <div class="card-stack-group" *ngFor="let stack of getStackedBoard(me)">
+            <div class="card stacked-card"
+                 *ngFor="let cardWrapper of stack.cards; let i = index"
+                 [style.marginTop.px]="i * 12"
+                 [style.zIndex]="i"
+                 [class.targetable]="targetingState === 'OWN_BOARD'"
+                 (click)="onOwnBoardClick(cardWrapper.originalIndex)">
+              <img [src]="'assets/cards/' + cardWrapper.instance.currentCard + '.jpg'" class="card-img">
+            </div>
+          </div>
+        </div>
+
+        <div class="player-hand" style="display: flex; gap: 10px;">
+          <div class="card"
+               *ngFor="let card of me.hand; let i = index"
+               [class.playable]="isMyTurn && gameState.turnPhase === 'MAIN'"
+               [class.selected]="i === selectedHandIndex"
+               [class.locked-out]="isLockedOut(i)"
+               (click)="onHandClick(i)">
+            <img [src]="'assets/cards/' + card + '.jpg'" class="card-img">
+          </div>
         </div>
       </div>
+
+      <div class="side-panel">
+        <button (click)="togglePlayer()" style="font-size: 0.6rem; opacity: 0.5;">DEBUG SWITCH</button>
+      </div>
+
     </div>
 
   </div>
