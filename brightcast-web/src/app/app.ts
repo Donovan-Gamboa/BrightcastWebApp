@@ -26,6 +26,7 @@ export class App implements OnInit {
   viewingGraveyard = false;
   viewingEnemyHand = false;
   selectedTargets: number[] = [];
+  showRules = false;
 
   constructor(
     private gameService: GameService,
@@ -78,9 +79,25 @@ export class App implements OnInit {
     return player.discardPile[player.discardPile.length - 1];
   }
 
+  toggleRules(){
+    this.showRules = !this.showRules;
+  }
+
+  isLockedOut(index: number): boolean {
+    return this.targetingState !== 'NONE' && this.selectedHandIndex !== index;
+  }
 
   onHandClick(index: number) {
     if (!this.gameState || !this.isMyTurn) return;
+    if (this.targetingState !== 'NONE' && this.targetingState !== 'OWN_HAND') {
+      if (this.selectedHandIndex === index) {
+        this.cancelTargeting();
+      } else {
+        alert("Finish your current action or cancel by clicking the selected card!");
+      }
+      return;
+    }
+
     const card = this.me!.hand[index];
 
     this.selectedTargets = [];

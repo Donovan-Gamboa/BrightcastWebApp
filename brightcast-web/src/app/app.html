@@ -1,5 +1,67 @@
 <div class="game-container">
 
+  <div style="position: absolute; top: 10px; right: 10px; z-index: 100;">
+    <button (click)="toggleRules()" style="background: rgba(255,255,255,0.2); border: 1px solid gold; color: gold; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+      📜 How to Play?
+    </button>
+  </div>
+
+  <div *ngIf="showRules" class="modal-overlay" (click)="toggleRules()">
+    <div class="modal-content" (click)="$event.stopPropagation()" style="max-width: 700px; border-color: gold;">
+      <button class="modal-close" (click)="toggleRules()">×</button>
+      <h2 style="color: #f1c40f; text-align: center; border-bottom: 1px solid #555; padding-bottom: 10px; margin-top: 0;">OFFICIAL RULES</h2>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+        <div>
+          <h3 style="color: #3498db; border-bottom: 1px solid #444;">🏆 Winning Conditions</h3>
+          <ul class="rules-list" style="padding-left: 20px; font-size: 0.9rem;">
+            [cite_start]<li><strong>Diversity:</strong> Collect 5 Spellcasters with <em style="color:#e74c3c">different</em> names [cite: 13-14].</li>
+            [cite_start]<li><strong>Unity:</strong> Collect 5 Spellcasters with the <em style="color:#e74c3c">same</em> name [cite: 20-21].</li>
+            <li><em>First to win 2 games takes the match!</em></li>
+          </ul>
+
+          <h3 style="color: #3498db; border-bottom: 1px solid #444;">⚔️ Turn Order</h3>
+          <ol class="rules-list" style="padding-left: 20px; font-size: 0.9rem;">
+            <li><strong>Draw Phase:</strong> Draw 1 card.</li>
+            <li><strong>Action Phase:</strong> Play 1 card & perform action.
+              <ul style="margin-top:5px; color:#aaa;">
+                <li>Spellcasters stay in play.</li>
+                <li>Monsters (Dragon) are discarded.</li>
+              </ul>
+            </li>
+            [cite_start]<li style="margin-top: 5px;"><strong>OPTIONAL SKIP:</strong> Instead of playing, Draw 1 extra card and end turn [cite: 65-66].</li>
+          </ol>
+          <p style="font-size: 0.8rem; color: #f39c12;">*Hand Limit: 8 Cards (Discard excess at end of turn)</p>
+        </div>
+
+        <div>
+          <h3 style="color: #e74c3c; border-bottom: 1px solid #444;">⚡ The "Stop" (Interrupt)</h3>
+          <p style="font-size: 0.9rem;">Stop an opponent's card <strong>as they play it!</strong></p>
+          <div style="background: rgba(231, 76, 60, 0.2); padding: 10px; border-radius: 5px; font-size: 0.85rem;">
+            [cite_start]<strong>Cost:</strong> Discard a <strong style="color: #3498db">Wizard</strong> + a <strong style="color: white">Matching Copy</strong> of their card[cite: 164].<br>
+            <strong>Result:</strong> Their card is negated and discarded.
+          </div>
+
+          <h3 style="color: #2ecc71; border-bottom: 1px solid #444;">🃏 Card Abilities</h3>
+          <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 5px;">
+            [cite_start]<div><strong style="color: #2ecc71;">DRUID:</strong> Look at enemy hand, discard 1 choice[cite: 138].</div>
+            [cite_start]<div><strong style="color: #f1c40f;">SAGE:</strong> Draw 2, Discard 1[cite: 153].</div>
+            [cite_start]<div><strong style="color: #9b59b6;">WARLOCK:</strong> Return 1 Spellcaster from grave (No Monsters)[cite: 155].</div>
+            <div><strong style="color: #e74c3c;">SORCERER:</strong> Destroy 1 enemy card in play.</div>
+            <div><strong style="color: #3498db;">WIZARD:</strong> Draw 1 OR use for Interrupt.</div>
+            <div><strong style="color: #e67e22;">DRAGON:</strong> Destroy up to 3 enemy cards.</div>
+            [cite_start]<div><strong style="color: #fff;">ALCHEMIST:</strong> Copies a Spellcaster you have in play[cite: 172].</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 20px;">
+        <button (click)="toggleRules()" style="background: #27ae60; color: white; padding: 10px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem;">Let's Play!</button>
+      </div>
+    </div>
+  </div>
+
   <div *ngIf="viewingGraveyard && me" class="modal-overlay">
     <div class="modal-content">
       <h2>Your Discard Pile</h2>
@@ -108,7 +170,7 @@
           <div class="card-stack-group" *ngFor="let stack of getStackedBoard(opponent)">
             <div class="card stacked-card"
                  *ngFor="let cardWrapper of stack.cards; let i = index"
-                 [style.marginTop.px]="i * 20"
+                 [style.marginTop.px]="i * 12"
                  [style.zIndex]="i"
                  [class.targetable]="targetingState === 'ENEMY_BOARD'"
                  (click)="onOpponentBoardClick(cardWrapper.originalIndex)">
@@ -159,7 +221,7 @@
           <div class="card-stack-group" *ngFor="let stack of getStackedBoard(me)">
             <div class="card stacked-card"
                  *ngFor="let cardWrapper of stack.cards; let i = index"
-                 [style.marginTop.px]="i * 20"
+                 [style.marginTop.px]="i * 12"
                  [style.zIndex]="i"
                  [class.targetable]="targetingState === 'OWN_BOARD'"
                  (click)="onOwnBoardClick(cardWrapper.originalIndex)">
@@ -173,6 +235,7 @@
                *ngFor="let card of me.hand; let i = index"
                [class.playable]="isMyTurn && gameState.turnPhase === 'MAIN'"
                [class.selected]="i === selectedHandIndex"
+               [class.locked-out]="isLockedOut(i)"
                (click)="onHandClick(i)">
             <img [src]="'assets/cards/' + card + '.jpg'" class="card-img">
           </div>

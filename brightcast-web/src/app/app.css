@@ -8,12 +8,13 @@
   width: 100%;
   overflow: hidden;
   background: radial-gradient(circle at center, #2e1a47 0%, #0d0814 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 
 .player-zone {
   display: grid;
-  grid-template-columns: 180px 1fr 180px;
+  grid-template-columns: 140px 1fr 140px;
   gap: 10px;
   padding: 10px;
   flex: 1;
@@ -23,9 +24,10 @@
 
 
 .player-zone.bottom {
-  align-items: flex-end;
   border-top: 1px solid rgba(255,255,255,0.1);
   border-bottom: none;
+  align-items: flex-end;
+
 }
 
 
@@ -74,7 +76,7 @@
   display: flex;
   gap: 15px;
   justify-content: center;
-  min-height: 140px;
+  min-height: 160px;
   width: 100%;
 }
 
@@ -107,6 +109,8 @@
 .stacked-card {
   position: absolute;
   top: 0; left: 0;
+  transition: margin-top 0.3s ease;
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.3);
 }
 
 
@@ -114,6 +118,17 @@
   transform: scale(1.05);
   cursor: pointer;
   z-index: 50;
+}
+
+.locked-out {
+  opacity: 0.3;
+  pointer-events: none;
+  filter: grayscale(100%);
+}
+
+.targeting-mode-active .card:not(.selected) {
+  opacity: 0.5;
+  cursor:not-allowed;
 }
 
 
