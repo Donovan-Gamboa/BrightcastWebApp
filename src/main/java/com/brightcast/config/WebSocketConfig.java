@@ -19,6 +19,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/brightcast-websocket")
-                .setAllowedOrigins("http://localhost:4200"); // Keep the CORS setting!
+                .setAllowedOrigins("*");
     }
 }

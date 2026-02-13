@@ -10,7 +10,7 @@ export class GameSocketService extends RxStomp {
   }
 
   public activateGameSocket() {
-    const proto = window.location.protocol === 'https:' ? 'ws' : 'wss';
+    const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const host = window.location.host;
     this.configure({
       brokerURL: `${proto}://${host}/brightcast-websocket`,
