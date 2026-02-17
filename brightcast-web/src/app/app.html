@@ -87,10 +87,16 @@
   </div>
 
   <div *ngIf="targetingState !== 'NONE'" class="targeting-banner">
-    <span *ngIf="selectedTargets.length === 0">Select Targets...</span>
-    <span *ngIf="selectedTargets.length > 0">{{ selectedTargets.length }} targets selected!</span>
-    <button *ngIf="selectedTargets.length > 0" (click)="confirmDragonAttack()" style="margin-left: 15px; background: #c0392b;">🔥 DESTROY</button>
-    <button (click)="cancelTargeting()" style="margin-left: 10px; background: #7f8c8d;">Cancel</button>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+      <span *ngIf="selectedTargets.length === 0" style="font-size: 1.2rem; font-weight: bold;">SELECT TARGETS</span>
+      <span *ngIf="selectedTargets.length > 0">{{ selectedTargets.length }} targets selected!</span>
+
+      <div style="display: flex; gap: 10px;">
+        <button *ngIf="selectedTargets.length > 0" (click)="confirmDragonAttack()" style="background: #c0392b; font-weight: bold;">🔥 DESTROY</button>
+        <button *ngIf="selectedTargets.length > 0" (click)="resetTargets()" style="background: #f39c12; color: black;">Reset</button>
+        <button (click)="cancelTargeting()" style="background: #7f8c8d;">Cancel</button>
+      </div>
+    </div>
   </div>
 
   <div *ngIf="!gameState" class="lobby">
@@ -158,7 +164,13 @@
                  [class.targetable]="targetingState === 'ENEMY_BOARD'"
                  (click)="onOpponentBoardClick(stack.cards[0].originalIndex)">
               <img [src]="'assets/cards/' + stack.type + '.jpg'" class="card-img">
+
               <div *ngIf="stack.cards.length > 1" class="card-count-badge">x{{ stack.cards.length }}</div>
+
+              <div *ngIf="getSelectionCount(stack.cards[0].originalIndex) > 0"
+                   class="target-count-badge">
+                🎯 x{{ getSelectionCount(stack.cards[0].originalIndex) }}
+              </div>
             </div>
           </div>
         </div>

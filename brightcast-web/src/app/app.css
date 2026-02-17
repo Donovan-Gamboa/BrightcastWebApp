@@ -84,30 +84,48 @@
   z-index: 60;
 }
 
-/* FIXED BANNER */
 .targeting-banner {
-  position: fixed; /* Fixes "moving screen down" issue */
-  top: 100px;
+  position: fixed;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.9);
-  padding: 15px 30px;
-  border-radius: 50px;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.95);
+  padding: 20px 40px;
+  border-radius: 12px;
   border: 2px solid #f1c40f;
   color: #fff;
   z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+  text-align: center;
+}
+
+.target-count-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #e74c3c;
+  color: white;
+  border: 2px solid white;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-weight: bold;
+  font-size: 1.2rem;
+  z-index: 100;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  pointer-events: none;
 }
 
 .field {
   display: flex;
-  gap: 15px;
+  gap: 10px;
   justify-content: center;
+  align-items: center;
   min-height: 160px;
   width: 100%;
+  padding: 10px 0;
+  flex-wrap: wrap;
+  align-content: center;
 }
 
 .card, .deck {

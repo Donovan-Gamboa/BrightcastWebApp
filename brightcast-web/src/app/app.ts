@@ -161,14 +161,16 @@ export class App implements OnInit {
     }
 
     if(this.me?.hand[this.selectedHandIndex!] === CardType.DRAGON) {
-      const existingIdx = this.selectedTargets.indexOf(originalIndex);
-      if (existingIdx > -1) {
-        this.selectedTargets.splice(existingIdx, 1);
+      if (this.selectedTargets.length < 3) {
+        this.selectedTargets.push(originalIndex);
       } else {
-        if(this.selectedTargets.length < 3) this.selectedTargets.push(originalIndex);
-        else alert("Max 3 targets!");
+        alert("Max 3 Targets!")
       }
     }
+  }
+
+  resetTargets() {
+    this.selectedTargets = [];
   }
 
   onEnemyHandCardClick(targetIndex: number) {
@@ -184,7 +186,13 @@ export class App implements OnInit {
     this.selectedTargets = [];
   }
 
-  toggleGraveyard() { this.viewingGraveyard = !this.viewingGraveyard; }
+  toggleGraveyard() {
+    if (this.viewingGraveyard && this.targetingState === 'OWN_GRAVEYARD') {
+      this.cancelTargeting();
+    } else {
+      this.viewingGraveyard = !this.viewingGraveyard;
+    }
+  }
   startTargeting(index: number, mode: TargetingState) { this.targetingState = mode; this.selectedHandIndex = index; }
 
   cancelTargeting() {
@@ -199,6 +207,10 @@ export class App implements OnInit {
   finalizeMove(cardIndex: number, extras: any = {}) {
     this.gameService.playCard(this.gameState!.gameId, this.playerName, cardIndex, extras);
     this.cancelTargeting();
+  }
+
+  getSelectionCount(originalIndex: number): number {
+    return this.selectedTargets.filter(i => i === originalIndex).length;
   }
 
   skipTurn() { if (this.isMyTurn) this.gameService.skipTurn(this.gameState!.gameId, this.playerName); }
