@@ -29,6 +29,9 @@ export class App implements OnInit {
   selectedTargets: number[] = [];
   showRules = false;
 
+  // NEW: Notification System
+  notificationMessage: string | null = null;
+
   constructor(
     private gameService: GameService,
     private cdr: ChangeDetectorRef
@@ -41,7 +44,7 @@ export class App implements OnInit {
       if (state?.status === 'WAITING_FOR_DISCARD' && this.isMyTurn) {
         this.targetingState = 'OWN_HAND';
         if (this.me!.hand.length > 8) {
-          alert(`Hand Limit Reached! Discard down to 8.`);
+          this.showNotification(`Hand Limit Reached! Discard down to 8.`);
         }
       }
       else if (state?.currentPlayer.name !== this.playerName) {
@@ -49,6 +52,17 @@ export class App implements OnInit {
       }
       this.cdr.detectChanges();
     });
+  }
+
+  // NEW: Replaces alert() with a game-styled popup
+  showNotification(msg: string) {
+    this.notificationMessage = msg;
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      if (this.notificationMessage === msg) {
+        this.notificationMessage = null;
+      }
+    }, 3000);
   }
 
   getStackedBoard(player: Player): CardStack[] {
@@ -79,13 +93,13 @@ export class App implements OnInit {
     if (!this.gameState || !this.isMyTurn) return;
 
     if (this.gameState.turnPhase === 'DRAW' && this.targetingState === 'NONE') {
-      alert("You must Draw a card first!");
+      this.showNotification("You must Draw a card first!");
       return;
     }
 
     if (this.targetingState !== 'NONE' && this.targetingState !== 'OWN_HAND') {
       if (this.selectedHandIndex === index) this.cancelTargeting();
-      else alert("Finish your current action or cancel by clicking the selected card!");
+      else this.showNotification("Finish your current action or cancel by clicking the selected card!");
       return;
     }
 
@@ -123,7 +137,7 @@ export class App implements OnInit {
         break;
       case CardType.ALCHEMIST:
         if (this.me!.board.length === 0) {
-          alert("You need a Spellcaster on the board to copy!");
+          this.showNotification("You need a Spellcaster on the board to copy!");
           return;
         }
         this.startTargeting(index, 'OWN_BOARD');
@@ -144,7 +158,7 @@ export class App implements OnInit {
     if (this.targetingState === 'OWN_GRAVEYARD') {
       const targetCard = this.me!.discardPile[targetIndex];
       if (targetCard === CardType.DRAGON || targetCard === CardType.ALCHEMIST) {
-        alert("Warlock can only revive Spellcasters (not Monsters or Wildcards)!");
+        this.showNotification("Warlock can only revive Spellcasters (not Monsters or Wildcards)!");
         return;
       }
       this.finalizeMove(this.selectedHandIndex!, { targetIndex: targetIndex });
@@ -164,7 +178,7 @@ export class App implements OnInit {
       if (this.selectedTargets.length < 3) {
         this.selectedTargets.push(originalIndex);
       } else {
-        alert("Max 3 Targets!")
+        this.showNotification("Max 3 Targets!");
       }
     }
   }

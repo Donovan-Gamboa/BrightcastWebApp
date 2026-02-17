@@ -6,6 +6,10 @@
     </button>
   </div>
 
+  <div *ngIf="notificationMessage" class="game-notification">
+    {{ notificationMessage }}
+  </div>
+
   <div *ngIf="showRules" class="modal-overlay" (click)="toggleRules()">
     <div class="modal-content" (click)="$event.stopPropagation()" style="max-width: 700px; border-color: gold;">
       <button class="modal-close" (click)="toggleRules()">×</button>
@@ -86,7 +90,7 @@
     </div>
   </div>
 
-  <div *ngIf="targetingState !== 'NONE'" class="targeting-banner">
+  <div *ngIf="targetingState !== 'NONE' && !viewingGraveyard && !viewingEnemyHand" class="targeting-banner">
     <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
       <span *ngIf="selectedTargets.length === 0" style="font-size: 1.2rem; font-weight: bold;">SELECT TARGETS</span>
       <span *ngIf="selectedTargets.length > 0">{{ selectedTargets.length }} targets selected!</span>
