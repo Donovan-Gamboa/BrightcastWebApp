@@ -24,6 +24,7 @@ export class App implements OnInit {
   targetingState: TargetingState = 'NONE';
   selectedHandIndex: number | null = null;
   viewingGraveyard = false;
+  viewingOpponentGraveyard = false;
   viewingEnemyHand = false;
   selectedTargets: number[] = [];
   showRules = false;
@@ -39,38 +40,26 @@ export class App implements OnInit {
 
       if (state?.status === 'WAITING_FOR_DISCARD' && this.isMyTurn) {
         this.targetingState = 'OWN_HAND';
-
         if (this.me!.hand.length > 8) {
-          alert(`Hand Limit Reached! You have ${this.me!.hand.length} cards. Discard down to 8.`);
-        } else {
-          alert("Sage Effect: Select a card to discard!");
+          alert(`Hand Limit Reached! Discard down to 8.`);
         }
-      }
-      else if (state?.status === 'WAITING_FOR_INTERRUPT' && !this.isMyTurn) {
       }
       else if (state?.currentPlayer.name !== this.playerName) {
         this.cancelTargeting();
       }
-
       this.cdr.detectChanges();
     });
   }
 
   getStackedBoard(player: Player): CardStack[] {
     const stacks: Map<string, CardStack> = new Map();
-
     player.board.forEach((cardInstance, index) => {
       const type = cardInstance.currentCard;
-
       if (!stacks.has(type)) {
         stacks.set(type, { type, cards: [] });
       }
-
-      stacks.get(type)!.cards.push({
-        instance: cardInstance,
-        originalIndex: index      });
+      stacks.get(type)!.cards.push({ instance: cardInstance, originalIndex: index });
     });
-
     return Array.from(stacks.values());
   }
 
@@ -79,83 +68,66 @@ export class App implements OnInit {
     return player.discardPile[player.discardPile.length - 1];
   }
 
-  toggleRules(){
-    this.showRules = !this.showRules;
-  }
+  toggleRules(){ this.showRules = !this.showRules; }
 
   isLockedOut(index: number): boolean {
-    if (this.targetingState === 'OWN_HAND') {
-      return false;
-    }
+    if (this.targetingState === 'OWN_HAND') return false;
     return this.targetingState !== 'NONE' && this.selectedHandIndex !== index;
   }
 
   onHandClick(index: number) {
     if (!this.gameState || !this.isMyTurn) return;
+
+    if (this.gameState.turnPhase === 'DRAW' && this.targetingState === 'NONE') {
+      alert("You must Draw a card first!");
+      return;
+    }
+
     if (this.targetingState !== 'NONE' && this.targetingState !== 'OWN_HAND') {
-      if (this.selectedHandIndex === index) {
-        this.cancelTargeting();
-      } else {
-        alert("Finish your current action or cancel by clicking the selected card!");
-      }
+      if (this.selectedHandIndex === index) this.cancelTargeting();
+      else alert("Finish your current action or cancel by clicking the selected card!");
       return;
     }
 
     const card = this.me!.hand[index];
-
     this.selectedTargets = [];
+
     if (this.targetingState === 'OWN_HAND') {
       if (this.gameState.status === 'WAITING_FOR_DISCARD') {
         this.gameService.discardCard(this.gameState.gameId, this.playerName, index);
         this.cancelTargeting();
         return;
       }
-
-      if(this.gameState.status !== 'PLAYING') {
-        console.warn("Game paused, cannot play cards");
-        return;
-      }
-
-      if (index === this.selectedHandIndex) {
-        alert("You cannot discard the card you are playing!");
-        return;
-      }
-      this.finalizeMove(this.selectedHandIndex!, { targetIndex: index });
       return;
     }
+
+    this.selectedHandIndex = index;
 
     switch (card) {
       case CardType.SAGE:
         this.finalizeMove(index);
         break;
-
       case CardType.SORCERER:
         this.startTargeting(index, 'ENEMY_BOARD');
         break;
-
       case CardType.DRAGON:
         this.startTargeting(index, 'ENEMY_BOARD');
         break;
-
       case CardType.WARLOCK:
         this.startTargeting(index, 'OWN_GRAVEYARD');
         this.viewingGraveyard = true;
         break;
-
       case CardType.DRUID:
         this.startTargeting(index, 'ENEMY_HAND');
         this.viewingEnemyHand = true;
         break;
-
       case CardType.ALCHEMIST:
         if (this.me!.board.length === 0) {
           alert("You need a Spellcaster on the board to copy!");
           return;
         }
         this.startTargeting(index, 'OWN_BOARD');
-        alert("Select a Spellcaster on your board to copy.");
         break;
-
       default:
         this.finalizeMove(index);
         break;
@@ -170,6 +142,11 @@ export class App implements OnInit {
 
   onGraveyardCardClick(targetIndex: number) {
     if (this.targetingState === 'OWN_GRAVEYARD') {
+      const targetCard = this.me!.discardPile[targetIndex];
+      if (targetCard === CardType.DRAGON || targetCard === CardType.ALCHEMIST) {
+        alert("Warlock can only revive Spellcasters (not Monsters or Wildcards)!");
+        return;
+      }
       this.finalizeMove(this.selectedHandIndex!, { targetIndex: targetIndex });
       this.viewingGraveyard = false;
     }
@@ -179,7 +156,7 @@ export class App implements OnInit {
     if(this.targetingState !== 'ENEMY_BOARD') return;
 
     if (this.me?.hand[this.selectedHandIndex!] === CardType.SORCERER) {
-      this.finalizeMove(this.selectedHandIndex!, { targetIndex: originalIndex, targetIndices: [originalIndex] });
+      this.finalizeMove(this.selectedHandIndex!, { targetIndex: originalIndex });
       return;
     }
 
@@ -201,51 +178,31 @@ export class App implements OnInit {
     }
   }
 
-
   confirmDragonAttack() {
     if (this.selectedTargets.length === 0) return;
     this.finalizeMove(this.selectedHandIndex!, { targetIndices: this.selectedTargets });
     this.selectedTargets = [];
   }
 
-  togglePlayer() {
-    this.playerName = this.playerName === 'Donovan' ? 'Guest' : 'Donovan';
-    this.cancelTargeting();
-    this.cdr.detectChanges();
-  }
-
   toggleGraveyard() { this.viewingGraveyard = !this.viewingGraveyard; }
-
-  startTargeting(index: number, mode: TargetingState) {
-    this.targetingState = mode;
-    this.selectedHandIndex = index;
-  }
+  startTargeting(index: number, mode: TargetingState) { this.targetingState = mode; this.selectedHandIndex = index; }
 
   cancelTargeting() {
     this.targetingState = 'NONE';
     this.selectedHandIndex = null;
     this.viewingGraveyard = false;
+    this.viewingOpponentGraveyard = false;
     this.viewingEnemyHand = false;
     this.selectedTargets = [];
   }
 
   finalizeMove(cardIndex: number, extras: any = {}) {
-    this.gameService.playCard(
-      this.gameState!.gameId,
-      this.playerName,
-      cardIndex,
-      extras
-    );
+    this.gameService.playCard(this.gameState!.gameId, this.playerName, cardIndex, extras);
     this.cancelTargeting();
   }
 
-  skipTurn() {
-    if (this.isMyTurn) this.gameService.skipTurn(this.gameState!.gameId, this.playerName);
-  }
-
-  drawCard() {
-    if (this.isMyTurn) this.gameService.drawCard(this.gameState!.gameId, this.playerName);
-  }
+  skipTurn() { if (this.isMyTurn) this.gameService.skipTurn(this.gameState!.gameId, this.playerName); }
+  drawCard() { if (this.isMyTurn) this.gameService.drawCard(this.gameState!.gameId, this.playerName); }
 
   get me(): Player | undefined {
     if (!this.gameState) return undefined;
@@ -256,29 +213,9 @@ export class App implements OnInit {
     if (!this.gameState) return undefined;
     return this.gameState.player1.name === this.playerName ? this.gameState.player2 : this.gameState.player1;
   }
-
   get isMyTurn(): boolean { return this.gameState?.currentPlayer.name === this.playerName; }
-
-  respondToInterrupt(choice: boolean) {
-    if (this.gameState) {
-      this.gameService.resolveInterrupt(this.gameState.gameId, choice);
-    }
-  }
-
-  leaveGame() {
-    this.gameState = null;
-    this.cancelTargeting();
-  }
-
-  createGame(name: string) {
-    if(!name) return alert("Enter a name!");
-    this.playerName = name;
-    this.gameService.createGame(name);
-  }
-
-  joinGame(gameId: string, name: string) {
-    if(!name || !gameId) return alert("Enter name and ID!");
-    this.playerName = name;
-    this.gameService.joinGame(gameId.toUpperCase(), name);
-  }
+  respondToInterrupt(choice: boolean) { if (this.gameState) this.gameService.resolveInterrupt(this.gameState.gameId, choice); }
+  leaveGame() { this.gameState = null; this.cancelTargeting(); }
+  createGame(name: string) { if(name) { this.playerName = name; this.gameService.createGame(name); } }
+  joinGame(gameId: string, name: string) { if(name && gameId) { this.playerName = name; this.gameService.joinGame(gameId.toUpperCase(), name); } }
 }
