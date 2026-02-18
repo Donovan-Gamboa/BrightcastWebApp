@@ -5,7 +5,8 @@ import com.brightcast.model.CardInstance;
 import com.brightcast.model.CardType;
 import com.brightcast.model.GameState;
 import com.brightcast.model.Player;
-import org.springframework.messaging.simp.SimpMessagingTemplate;import org.springframework.stereotype.Service;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
@@ -70,6 +71,11 @@ public class GameService {
     public GameState drawCard(String gameId, String playerName) {
         GameState game = activeGames.get(gameId);
         if (game == null) return null;
+
+        if (!game.getStatus().equals("PLAYING") && !game.getStatus().equals("WAITING_FOR_PLAYER")) {
+            throw new IllegalStateException("Finish your current action first!");
+        }
+
         Player currentPlayer = game.getCurrentPlayer();
         if (!currentPlayer.getName().equals(playerName)) throw new IllegalArgumentException("Not your turn!");
         if (!"DRAW".equals(game.getTurnPhase())) throw new IllegalStateException("Already drawn!");
@@ -84,6 +90,10 @@ public class GameService {
         GameState game = activeGames.get(gameId);
         Player currentPlayer = game.getCurrentPlayer();
 
+        if (!game.getStatus().equals("PLAYING")) {
+            throw new IllegalStateException("You cannot skip turn right now! Complete your action (Discard/Interrupt).");
+        }
+
         if (!currentPlayer.getName().equals(playerName)) throw new IllegalArgumentException("Not your turn!");
         if (!"MAIN".equals(game.getTurnPhase())) throw new IllegalStateException("Draw first!");
 
@@ -95,7 +105,8 @@ public class GameService {
 
     public GameState playCard(String gameId, GameSocketController.MoveRequest request) {
         GameState game = activeGames.get(gameId);
-        if (!game.getStatus().equals("PLAYING")) throw new IllegalStateException("Game paused.");
+
+        if (!game.getStatus().equals("PLAYING")) throw new IllegalStateException("Game is paused or waiting for action.");
         if ("DRAW".equals(game.getTurnPhase())) throw new IllegalStateException("Draw first!");
 
         Player currentPlayer = game.getCurrentPlayer();
@@ -145,7 +156,8 @@ public class GameService {
     public GameState discardCard(String gameId, String playerName, int cardIndex) {
         GameState game = activeGames.get(gameId);
         Player currentPlayer = game.getCurrentPlayer();
-        if (!game.getStatus().equals("WAITING_FOR_DISCARD")) throw new IllegalStateException("Not discarding");
+
+        if (!game.getStatus().equals("WAITING_FOR_DISCARD")) throw new IllegalStateException("Not discarding mode");
 
         if (cardIndex >= 0 && cardIndex < currentPlayer.getHandSize()) {
             CardType c = currentPlayer.getHand().get(cardIndex);
@@ -155,6 +167,7 @@ public class GameService {
 
         if (checkWinCondition(currentPlayer.getBoard())) {
             game.setWinner(currentPlayer.getName());
+            game.addLog("GAME OVER! " + currentPlayer.getName() + " wins!");
         } else {
             endTurnOrForceDiscard(game);
         }
@@ -164,18 +177,25 @@ public class GameService {
     private GameState executeCardEffect(GameState game, CardType effectiveCard, GameSocketController.MoveRequest request) {
         Player currentPlayer = game.getCurrentPlayer();
         Player opponent = game.getOpponent();
+        boolean actionSuccessful = true;
 
         switch (effectiveCard) {
             case WIZARD:
-                if (!currentPlayer.getDeck().isEmpty()) currentPlayer.drawCard();
+                if (!currentPlayer.getDeck().isEmpty()) {
+                    currentPlayer.drawCard();
+                    game.addLog(currentPlayer.getName() + " drew 1 card (Wizard).");
+                }
                 break;
             case SAGE:
                 currentPlayer.drawCard(); currentPlayer.drawCard();
+                game.addLog(currentPlayer.getName() + " drew 2 cards (Sage).");
                 game.setStatus("WAITING_FOR_DISCARD");
                 return game;
             case SORCERER:
                 if (request.getTargetIndex() != null && request.getTargetIndex() < opponent.getBoard().size()) {
-                    opponent.discardFromBoard(opponent.getBoard().get(request.getTargetIndex()));
+                    CardInstance target = opponent.getBoard().get(request.getTargetIndex());
+                    opponent.discardFromBoard(target);
+                    game.addLog(currentPlayer.getName() + " destroyed " + target.getCurrentCard() + "!");
                 }
                 break;
             case DRAGON:
@@ -183,16 +203,24 @@ public class GameService {
                     CardInstance dragonInstance = currentPlayer.getBoard().get(currentPlayer.getBoard().size() - 1);
                     currentPlayer.discardFromBoard(dragonInstance);
                 }
-                if (request.getTargetIndices() != null) {
-                    request.getTargetIndices().stream().sorted(java.util.Comparator.reverseOrder())
-                            .forEach(idx -> {
-                                if (idx < opponent.getBoard().size()) opponent.discardFromBoard(opponent.getBoard().get(idx));
-                            });
+                if (request.getTargetIndices() != null && !request.getTargetIndices().isEmpty()) {
+                    int count = 0;
+                    List<Integer> sortedIndices = request.getTargetIndices().stream()
+                            .sorted(java.util.Comparator.reverseOrder()).toList();
+
+                    for(Integer idx : sortedIndices) {
+                        if (idx < opponent.getBoard().size()) {
+                            opponent.discardFromBoard(opponent.getBoard().get(idx));
+                            count++;
+                        }
+                    }
+                    game.addLog(currentPlayer.getName() + " Dragon burned " + count + " cards!");
                 }
                 break;
             case DRUID:
                 if (request.getTargetIndex() != null && request.getTargetIndex() < opponent.getHandSize()) {
                     opponent.discardFromHand(opponent.getHand().get(request.getTargetIndex()));
+                    game.addLog(currentPlayer.getName() + " forced opponent to discard a card.");
                 }
                 break;
             case WARLOCK:
@@ -201,7 +229,13 @@ public class GameService {
                     if (target.getCategory() == CardType.Category.SPELLCASTER) {
                         currentPlayer.getDiscardPile().remove(request.getTargetIndex().intValue());
                         currentPlayer.addCardToHand(target);
+                        game.addLog(currentPlayer.getName() + " returned " + target + " from graveyard.");
+                    } else {
+                        actionSuccessful = false;
+                        game.addLog("Invalid Warlock target! Must be Spellcaster.");
                     }
+                } else {
+                    actionSuccessful = false;
                 }
                 break;
             case ALCHEMIST: break;
@@ -209,6 +243,7 @@ public class GameService {
 
         if (checkWinCondition(currentPlayer.getBoard())) {
             game.setWinner(currentPlayer.getName());
+            game.addLog("🏆 " + currentPlayer.getName() + " WINS THE GAME! 🏆");
         } else {
             endTurnOrForceDiscard(game);
         }
@@ -265,7 +300,7 @@ public class GameService {
             game.setStatus("PLAYING");
             game.setPendingCard(null);
             game.setPendingTargetIndex(null);
-            game.addLog(opponent.getName() + " INTERRUPTED " + playedCard + "!");
+            game.addLog("⚡ " + opponent.getName() + " INTERRUPTED " + playedCard + "!");
             game.switchTurn();
             return game;
         }
