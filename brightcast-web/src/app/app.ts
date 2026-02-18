@@ -29,7 +29,6 @@ export class App implements OnInit {
   selectedTargets: number[] = [];
   showRules = false;
 
-  // NEW: Notification System
   notificationMessage: string | null = null;
 
   constructor(
@@ -54,10 +53,8 @@ export class App implements OnInit {
     });
   }
 
-  // NEW: Replaces alert() with a game-styled popup
   showNotification(msg: string) {
     this.notificationMessage = msg;
-    // Auto-hide after 3 seconds
     setTimeout(() => {
       if (this.notificationMessage === msg) {
         this.notificationMessage = null;
@@ -92,29 +89,27 @@ export class App implements OnInit {
   onHandClick(index: number) {
     if (!this.gameState || !this.isMyTurn) return;
 
+    if (this.gameState.status === 'WAITING_FOR_DISCARD') {
+      this.gameService.discardCard(this.gameState.gameId, this.playerName, index);
+      this.cancelTargeting();      return;
+    }
+
     if (this.gameState.turnPhase === 'DRAW' && this.targetingState === 'NONE') {
       this.showNotification("You must Draw a card first!");
       return;
     }
 
     if (this.targetingState !== 'NONE' && this.targetingState !== 'OWN_HAND') {
-      if (this.selectedHandIndex === index) this.cancelTargeting();
-      else this.showNotification("Finish your current action or cancel by clicking the selected card!");
+      if (this.selectedHandIndex === index) {
+        this.cancelTargeting();
+      } else {
+        this.showNotification("Finish your current action or cancel by clicking the selected card!");
+      }
       return;
     }
 
     const card = this.me!.hand[index];
     this.selectedTargets = [];
-
-    if (this.targetingState === 'OWN_HAND') {
-      if (this.gameState.status === 'WAITING_FOR_DISCARD') {
-        this.gameService.discardCard(this.gameState.gameId, this.playerName, index);
-        this.cancelTargeting();
-        return;
-      }
-      return;
-    }
-
     this.selectedHandIndex = index;
 
     switch (card) {
@@ -210,6 +205,11 @@ export class App implements OnInit {
   startTargeting(index: number, mode: TargetingState) { this.targetingState = mode; this.selectedHandIndex = index; }
 
   cancelTargeting() {
+    if (this.gameState?.status === 'WAITING_FOR_DISCARD' && this.isMyTurn) {
+      this.showNotification("You must discard a card to proceed!");
+      return;
+    }
+
     this.targetingState = 'NONE';
     this.selectedHandIndex = null;
     this.viewingGraveyard = false;

@@ -1,7 +1,8 @@
 <div class="game-container">
 
   <div style="position: absolute; top: 10px; right: 10px; z-index: 100;">
-    <button (click)="toggleRules()" style="background: rgba(255,255,255,0.2); border: 1px solid gold; color: gold; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+    <button (click)="toggleRules()"
+            style="background: rgba(255,255,255,0.2); border: 1px solid gold; color: gold; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">
       📜 How to Play?
     </button>
   </div>
@@ -13,12 +14,15 @@
   <div *ngIf="showRules" class="modal-overlay" (click)="toggleRules()">
     <div class="modal-content" (click)="$event.stopPropagation()" style="max-width: 700px; border-color: gold;">
       <button class="modal-close" (click)="toggleRules()">×</button>
-      <h2 style="color: #f1c40f; text-align: center; border-bottom: 1px solid #555; padding-bottom: 10px; margin-top: 0;">OFFICIAL RULES</h2>
+      <h2
+        style="color: #f1c40f; text-align: center; border-bottom: 1px solid #555; padding-bottom: 10px; margin-top: 0;">
+        OFFICIAL RULES</h2>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
         <div>
           <h3 style="color: #3498db; border-bottom: 1px solid #444;">🏆 Winning Conditions</h3>
           <ul class="rules-list" style="padding-left: 20px; font-size: 0.9rem;">
-            <li><strong>Diversity:</strong> Collect 5 Spellcasters with <em style="color:#e74c3c">different</em> names.</li>
+            <li><strong>Diversity:</strong> Collect 5 Spellcasters with <em style="color:#e74c3c">different</em> names.
+            </li>
             <li><strong>Unity:</strong> Collect 5 Spellcasters with the <em style="color:#e74c3c">same</em> name.</li>
           </ul>
           <h3 style="color: #3498db; border-bottom: 1px solid #444;">⚔️ Turn Order</h3>
@@ -43,7 +47,9 @@
     <div class="modal-content" style="border-color: gold; text-align: center;">
       <h1 style="font-size: 3rem; color: gold;">GAME OVER!</h1>
       <h2 style="color: white;">🏆 {{ gameState?.winnerName }} WINS! 🏆</h2>
-      <button (click)="leaveGame()" style="margin-top: 20px; background: #27ae60; font-size: 1.2rem; padding: 10px 30px;">Back to Lobby</button>
+      <button (click)="leaveGame()"
+              style="margin-top: 20px; background: #27ae60; font-size: 1.2rem; padding: 10px 30px;">Back to Lobby
+      </button>
     </div>
   </div>
 
@@ -96,8 +102,12 @@
       <span *ngIf="selectedTargets.length > 0">{{ selectedTargets.length }} targets selected!</span>
 
       <div style="display: flex; gap: 10px;">
-        <button *ngIf="selectedTargets.length > 0" (click)="confirmDragonAttack()" style="background: #c0392b; font-weight: bold;">🔥 DESTROY</button>
-        <button *ngIf="selectedTargets.length > 0" (click)="resetTargets()" style="background: #f39c12; color: black;">Reset</button>
+        <button *ngIf="selectedTargets.length > 0" (click)="confirmDragonAttack()"
+                style="background: #c0392b; font-weight: bold;">🔥 DESTROY
+        </button>
+        <button *ngIf="selectedTargets.length > 0" (click)="resetTargets()" style="background: #f39c12; color: black;">
+          Reset
+        </button>
         <button (click)="cancelTargeting()" style="background: #7f8c8d;">Cancel</button>
       </div>
     </div>
@@ -105,22 +115,28 @@
 
   <div *ngIf="!gameState" class="lobby">
     <h1 style="font-size: 4rem; color: var(--accent-gold);">Brightcast</h1>
-    <div style="background: var(--bg-panel); padding: 40px; border-radius: 20px; border: 2px solid var(--border-color); display: flex; flex-direction: column; gap: 20px; width: 300px;">
+    <div
+      style="background: var(--bg-panel); padding: 40px; border-radius: 20px; border: 2px solid var(--border-color); display: flex; flex-direction: column; gap: 20px; width: 300px;">
       <label>ENTER YOUR NAME</label>
-      <input #nameInput type="text" placeholder="e.g. Wizard123" style="padding: 10px; border-radius: 8px; border: none; background: rgba(0,0,0,0.3); color: white; font-weight: bold;">
+      <input #nameInput type="text" placeholder="e.g. Wizard123"
+             style="padding: 10px; border-radius: 8px; border: none; background: rgba(0,0,0,0.3); color: white; font-weight: bold;">
       <button (click)="createGame(nameInput.value)">CREATE NEW GAME</button>
       <div style="text-align: center; color: rgba(255,255,255,0.5);">- OR -</div>
       <label>JOIN GAME ID</label>
       <div style="display: flex; gap: 10px;">
-        <input #idInput type="text" placeholder="ABCD" maxlength="4" style="width: 80px; text-transform: uppercase; text-align: center; padding: 10px; border-radius: 8px; border: none; background: rgba(0,0,0,0.3); color: white; font-weight: bold;">
-        <button (click)="joinGame(idInput.value, nameInput.value)" style="flex: 1; background: var(--accent-green);">JOIN</button>
+        <input #idInput type="text" placeholder="ABCD" maxlength="4"
+               style="width: 80px; text-transform: uppercase; text-align: center; padding: 10px; border-radius: 8px; border: none; background: rgba(0,0,0,0.3); color: white; font-weight: bold;">
+        <button (click)="joinGame(idInput.value, nameInput.value)" style="flex: 1; background: var(--accent-green);">
+          JOIN
+        </button>
       </div>
     </div>
   </div>
 
   <div *ngIf="gameState && !opponent" class="lobby">
     <h1>Waiting for Player 2...</h1>
-    <div style="font-size: 1.5rem;">GAME ID: <strong style="color: var(--accent-gold); font-size: 3rem;">{{ gameState.gameId }}</strong></div>
+    <div style="font-size: 1.5rem;">GAME ID: <strong
+      style="color: var(--accent-gold); font-size: 3rem;">{{ gameState.gameId }}</strong></div>
   </div>
 
   <div *ngIf="gameState?.status === 'WAITING_FOR_INTERRUPT' && !isMyTurn" class="modal-overlay">
@@ -149,7 +165,10 @@
             <img [src]="'assets/cards/' + topCard + '.jpg'" class="card-img">
           </ng-container>
           <ng-template #emptyOppDiscard>
-            <div style="border: 2px dashed #555; width: 100%; height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #555;">EMPTY</div>
+            <div
+              style="border: 2px dashed #555; width: 100%; height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #555;">
+              EMPTY
+            </div>
           </ng-template>
         </div>
       </div>
@@ -183,7 +202,9 @@
     </div>
 
     <div class="center-info">
-      <div *ngIf="isMyTurn" style="color: #f1c40f; font-size: 1.5rem; font-weight: bold; letter-spacing: 2px;">YOUR TURN</div>
+      <div *ngIf="isMyTurn" style="color: #f1c40f; font-size: 1.5rem; font-weight: bold; letter-spacing: 2px;">YOUR
+        TURN
+      </div>
       <div *ngIf="!isMyTurn" style="color: #95a5a6;">OPPONENT'S TURN</div>
     </div>
 
@@ -198,7 +219,10 @@
             <img [src]="'assets/cards/' + topCard + '.jpg'" class="card-img">
           </ng-container>
           <ng-template #emptyMyDiscard>
-            <div style="border: 2px dashed #555; width: 100%; height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #555;">EMPTY</div>
+            <div
+              style="border: 2px dashed #555; width: 100%; height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #555;">
+              EMPTY
+            </div>
           </ng-template>
         </div>
         <span style="font-size: 0.7rem;">DISCARD</span>
@@ -207,7 +231,9 @@
           <img src="assets/cards/BACK_MINE.jpg" class="card-img">
           <div *ngIf="isMyTurn && gameState.turnPhase === 'DRAW'" class="draw-indicator">DRAW</div>
         </div>
-        <button *ngIf="isMyTurn && gameState.turnPhase === 'MAIN'" (click)="skipTurn()" style="font-size: 0.7rem; padding: 5px; background: #c0392b;">SKIP TURN</button>
+        <button *ngIf="isMyTurn && gameState.turnPhase === 'MAIN'" (click)="skipTurn()"
+                style="font-size: 0.7rem; padding: 5px; background: #c0392b;">SKIP TURN
+        </button>
       </div>
 
       <div class="center-panel">

@@ -71,6 +71,11 @@ public class GameService {
     public GameState drawCard(String gameId, String playerName) {
         GameState game = activeGames.get(gameId);
         if (game == null) return null;
+
+        if (!game.getStatus().equals("PLAYING") && !game.getStatus().equals("WAITING_FOR_PLAYER")) {
+            throw new IllegalStateException("Finish your current action first!");
+        }
+
         Player currentPlayer = game.getCurrentPlayer();
         if (!currentPlayer.getName().equals(playerName)) throw new IllegalArgumentException("Not your turn!");
         if (!"DRAW".equals(game.getTurnPhase())) throw new IllegalStateException("Already drawn!");
@@ -85,6 +90,10 @@ public class GameService {
         GameState game = activeGames.get(gameId);
         Player currentPlayer = game.getCurrentPlayer();
 
+        if (!game.getStatus().equals("PLAYING")) {
+            throw new IllegalStateException("You cannot skip turn right now! Complete your action (Discard/Interrupt).");
+        }
+
         if (!currentPlayer.getName().equals(playerName)) throw new IllegalArgumentException("Not your turn!");
         if (!"MAIN".equals(game.getTurnPhase())) throw new IllegalStateException("Draw first!");
 
@@ -96,7 +105,8 @@ public class GameService {
 
     public GameState playCard(String gameId, GameSocketController.MoveRequest request) {
         GameState game = activeGames.get(gameId);
-        if (!game.getStatus().equals("PLAYING")) throw new IllegalStateException("Game paused.");
+
+        if (!game.getStatus().equals("PLAYING")) throw new IllegalStateException("Game is paused or waiting for action.");
         if ("DRAW".equals(game.getTurnPhase())) throw new IllegalStateException("Draw first!");
 
         Player currentPlayer = game.getCurrentPlayer();
@@ -146,7 +156,8 @@ public class GameService {
     public GameState discardCard(String gameId, String playerName, int cardIndex) {
         GameState game = activeGames.get(gameId);
         Player currentPlayer = game.getCurrentPlayer();
-        if (!game.getStatus().equals("WAITING_FOR_DISCARD")) throw new IllegalStateException("Not discarding");
+
+        if (!game.getStatus().equals("WAITING_FOR_DISCARD")) throw new IllegalStateException("Not discarding mode");
 
         if (cardIndex >= 0 && cardIndex < currentPlayer.getHandSize()) {
             CardType c = currentPlayer.getHand().get(cardIndex);
@@ -228,17 +239,6 @@ public class GameService {
                 }
                 break;
             case ALCHEMIST: break;
-        }
-
-        // Only end turn if the action was valid (mainly for Warlock safety)
-        if (!actionSuccessful) {
-            // Revert play if possible? Or just don't end turn.
-            // In this simple engine, we just don't end turn, letting them try again.
-            // But the card is already on board.
-            // Actually, for Warlock, if they messed up, they effectively wasted the turn's action phase
-            // but we shouldn't crash.
-            // Better UX: Let them end turn.
-            // Current Fix: Just proceed.
         }
 
         if (checkWinCondition(currentPlayer.getBoard())) {
