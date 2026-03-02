@@ -1,10 +1,7 @@
 <div class="game-container">
 
   <div style="position: absolute; top: 10px; right: 10px; z-index: 100;">
-    <button (click)="toggleRules()"
-            style="background: rgba(255,255,255,0.2); border: 1px solid gold; color: gold; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">
-      📜 How to Play?
-    </button>
+    <button (click)="toggleRules()" class="rules-btn">📜 How to Play?</button>
   </div>
 
   <div *ngIf="notificationMessage" class="game-notification">
@@ -12,31 +9,60 @@
   </div>
 
   <div *ngIf="showRules" class="modal-overlay" (click)="toggleRules()">
-    <div class="modal-content" (click)="$event.stopPropagation()" style="max-width: 700px; border-color: gold;">
+    <div class="modal-content rules-modal" (click)="$event.stopPropagation()">
       <button class="modal-close" (click)="toggleRules()">×</button>
       <h2
         style="color: #f1c40f; text-align: center; border-bottom: 1px solid #555; padding-bottom: 10px; margin-top: 0;">
         OFFICIAL RULES</h2>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <div>
-          <h3 style="color: #3498db; border-bottom: 1px solid #444;">🏆 Winning Conditions</h3>
-          <ul class="rules-list" style="padding-left: 20px; font-size: 0.9rem;">
-            <li><strong>Diversity:</strong> Collect 5 Spellcasters with <em style="color:#e74c3c">different</em> names.
-            </li>
-            <li><strong>Unity:</strong> Collect 5 Spellcasters with the <em style="color:#e74c3c">same</em> name.</li>
+
+      <div class="rules-grid">
+        <div class="rules-col">
+          <h3>🏆 How to Win</h3>
+          <ul>
+            <li><strong>Diversity:</strong> 5 Spellcasters with <em>different</em> names in play.</li>
+            <li><strong>Unity:</strong> 5 Spellcasters with the <em>same</em> name in play.</li>
           </ul>
-          <h3 style="color: #3498db; border-bottom: 1px solid #444;">⚔️ Turn Order</h3>
-          <ol class="rules-list" style="padding-left: 20px; font-size: 0.9rem;">
-            <li><strong>Draw Phase:</strong> Draw 1 card.</li>
-            <li><strong>Action Phase:</strong> Play 1 card & perform action.</li>
+          <p style="font-size: 0.8rem; color: #aaa; margin-top: -5px;">First to win 2 games wins the match!</p>
+
+          <h3>⚔️ Turn Order</h3>
+          <ol>
+            <li><strong>Draw Phase:</strong> Draw 1 card at start of turn.</li>
+            <li><strong>Action Phase:</strong> Play 1 card & use its ability.
+              <ul style="color: #aaa; margin-top: 5px;">
+                <li>Spellcasters stay in play.</li>
+                <li>Monsters (Dragon) are discarded.</li>
+              </ul>
+            </li>
           </ol>
+          <div class="rule-box info-box">
+            <strong>Optional Skip:</strong> Instead of playing a card, draw 1 extra card and end turn.<br>
+            <strong>Hand Limit:</strong> Max 8 cards. Discard excess at end of turn.
+          </div>
+
+          <h3>⚡ Interrupts (The "Stop")</h3>
+          <div class="rule-box interrupt-box">
+            Stop an opponent's card <strong>as it's played!</strong><br><br>
+            <strong>Cost:</strong> Discard 1 <strong>Wizard</strong> + 1 <strong>Matching Copy</strong> of their
+            card.<br>
+            <strong>Result:</strong> Their card is negated and discarded.
+          </div>
         </div>
-        <div>
-          <h3 style="color: #2ecc71; border-bottom: 1px solid #444;">🃏 Key Abilities</h3>
-          <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 5px;">
-            <div><strong style="color: #9b59b6;">WARLOCK:</strong> Return 1 Spellcaster from grave.</div>
-            <div><strong style="color: #e67e22;">DRAGON:</strong> Destroy up to 3 enemy cards.</div>
-            <div><strong style="color: #fff;">ALCHEMIST:</strong> Copies a Spellcaster you have in play.</div>
+
+        <div class="rules-col">
+          <h3>🃏 Card Abilities</h3>
+          <div class="card-abilities">
+            <p><strong class="c-druid">DRUID (Spellcaster):</strong> Look at opponent's hand, force them to discard 1
+              card of your choice.</p>
+            <p><strong class="c-sage">SAGE (Spellcaster):</strong> Draw 2 cards, then discard 1 card from your hand.</p>
+            <p><strong class="c-warlock">WARLOCK (Spellcaster):</strong> Return 1 Spellcaster from your discard pile to
+              your hand. <em>(No Monsters/Wildcards)</em>.</p>
+            <p><strong class="c-sorcerer">SORCERER (Spellcaster):</strong> Destroy 1 of your opponent's cards in play.
+            </p>
+            <p><strong class="c-wizard">WIZARD (Spellcaster):</strong> Draw 1 card. <em>(Or hold in hand to use as an
+              Interrupt)</em>.</p>
+            <p><strong class="c-dragon">DRAGON (Monster):</strong> Destroy up to 3 of your opponent's cards in play.</p>
+            <p><strong class="c-alchemist">ALCHEMIST (Wildcard):</strong> Exact copy of a Spellcaster you already have
+              in play.</p>
           </div>
         </div>
       </div>
@@ -114,7 +140,8 @@
   </div>
 
   <div *ngIf="!gameState" class="lobby">
-    <h1 style="font-size: 4rem; color: var(--accent-gold);">Brightcast</h1>
+    <h1 style="font-size: 4rem; color: var(--accent-gold); text-shadow: 0 0 20px rgba(255, 204, 0, 0.5);">
+      Brightcast</h1>
     <div
       style="background: var(--bg-panel); padding: 40px; border-radius: 20px; border: 2px solid var(--border-color); display: flex; flex-direction: column; gap: 20px; width: 300px;">
       <label>ENTER YOUR NAME</label>
@@ -187,11 +214,8 @@
                  [class.targetable]="targetingState === 'ENEMY_BOARD'"
                  (click)="onOpponentBoardClick(stack.cards[0].originalIndex)">
               <img [src]="'assets/cards/' + stack.type + '.jpg'" class="card-img">
-
               <div *ngIf="stack.cards.length > 1" class="card-count-badge">x{{ stack.cards.length }}</div>
-
-              <div *ngIf="getSelectionCount(stack.cards[0].originalIndex) > 0"
-                   class="target-count-badge">
+              <div *ngIf="getSelectionCount(stack.cards[0].originalIndex) > 0" class="target-count-badge">
                 🎯 x{{ getSelectionCount(stack.cards[0].originalIndex) }}
               </div>
             </div>

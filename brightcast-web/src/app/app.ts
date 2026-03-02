@@ -34,7 +34,8 @@ export class App implements OnInit {
   constructor(
     private gameService: GameService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+  }
 
   ngOnInit() {
     this.gameService.gameState$.subscribe(state => {
@@ -45,8 +46,7 @@ export class App implements OnInit {
         if (this.me!.hand.length > 8) {
           this.showNotification(`Hand Limit Reached! Discard down to 8.`);
         }
-      }
-      else if (state?.currentPlayer.name !== this.playerName) {
+      } else if (state?.currentPlayer.name !== this.playerName) {
         this.cancelTargeting();
       }
       this.cdr.detectChanges();
@@ -67,9 +67,9 @@ export class App implements OnInit {
     player.board.forEach((cardInstance, index) => {
       const type = cardInstance.currentCard;
       if (!stacks.has(type)) {
-        stacks.set(type, { type, cards: [] });
+        stacks.set(type, {type, cards: []});
       }
-      stacks.get(type)!.cards.push({ instance: cardInstance, originalIndex: index });
+      stacks.get(type)!.cards.push({instance: cardInstance, originalIndex: index});
     });
     return Array.from(stacks.values());
   }
@@ -79,7 +79,9 @@ export class App implements OnInit {
     return player.discardPile[player.discardPile.length - 1];
   }
 
-  toggleRules(){ this.showRules = !this.showRules; }
+  toggleRules() {
+    this.showRules = !this.showRules;
+  }
 
   isLockedOut(index: number): boolean {
     if (this.targetingState === 'OWN_HAND') return false;
@@ -91,7 +93,8 @@ export class App implements OnInit {
 
     if (this.gameState.status === 'WAITING_FOR_DISCARD') {
       this.gameService.discardCard(this.gameState.gameId, this.playerName, index);
-      this.cancelTargeting();      return;
+      this.cancelTargeting();
+      return;
     }
 
     if (this.gameState.turnPhase === 'DRAW' && this.targetingState === 'NONE') {
@@ -145,7 +148,7 @@ export class App implements OnInit {
 
   onOwnBoardClick(originalIndex: number) {
     if (this.targetingState === 'OWN_BOARD') {
-      this.finalizeMove(this.selectedHandIndex!, { targetIndex: originalIndex });
+      this.finalizeMove(this.selectedHandIndex!, {targetIndex: originalIndex});
     }
   }
 
@@ -156,20 +159,20 @@ export class App implements OnInit {
         this.showNotification("Warlock can only revive Spellcasters (not Monsters or Wildcards)!");
         return;
       }
-      this.finalizeMove(this.selectedHandIndex!, { targetIndex: targetIndex });
+      this.finalizeMove(this.selectedHandIndex!, {targetIndex: targetIndex});
       this.viewingGraveyard = false;
     }
   }
 
   onOpponentBoardClick(originalIndex: number) {
-    if(this.targetingState !== 'ENEMY_BOARD') return;
+    if (this.targetingState !== 'ENEMY_BOARD') return;
 
     if (this.me?.hand[this.selectedHandIndex!] === CardType.SORCERER) {
-      this.finalizeMove(this.selectedHandIndex!, { targetIndex: originalIndex });
+      this.finalizeMove(this.selectedHandIndex!, {targetIndex: originalIndex});
       return;
     }
 
-    if(this.me?.hand[this.selectedHandIndex!] === CardType.DRAGON) {
+    if (this.me?.hand[this.selectedHandIndex!] === CardType.DRAGON) {
       if (this.selectedTargets.length < 3) {
         this.selectedTargets.push(originalIndex);
       } else {
@@ -184,14 +187,14 @@ export class App implements OnInit {
 
   onEnemyHandCardClick(targetIndex: number) {
     if (this.targetingState === 'ENEMY_HAND') {
-      this.finalizeMove(this.selectedHandIndex!, { targetIndex: targetIndex });
+      this.finalizeMove(this.selectedHandIndex!, {targetIndex: targetIndex});
       this.viewingEnemyHand = false;
     }
   }
 
   confirmDragonAttack() {
     if (this.selectedTargets.length === 0) return;
-    this.finalizeMove(this.selectedHandIndex!, { targetIndices: this.selectedTargets });
+    this.finalizeMove(this.selectedHandIndex!, {targetIndices: this.selectedTargets});
     this.selectedTargets = [];
   }
 
@@ -202,7 +205,11 @@ export class App implements OnInit {
       this.viewingGraveyard = !this.viewingGraveyard;
     }
   }
-  startTargeting(index: number, mode: TargetingState) { this.targetingState = mode; this.selectedHandIndex = index; }
+
+  startTargeting(index: number, mode: TargetingState) {
+    this.targetingState = mode;
+    this.selectedHandIndex = index;
+  }
 
   cancelTargeting() {
     if (this.gameState?.status === 'WAITING_FOR_DISCARD' && this.isMyTurn) {
@@ -227,8 +234,13 @@ export class App implements OnInit {
     return this.selectedTargets.filter(i => i === originalIndex).length;
   }
 
-  skipTurn() { if (this.isMyTurn) this.gameService.skipTurn(this.gameState!.gameId, this.playerName); }
-  drawCard() { if (this.isMyTurn) this.gameService.drawCard(this.gameState!.gameId, this.playerName); }
+  skipTurn() {
+    if (this.isMyTurn) this.gameService.skipTurn(this.gameState!.gameId, this.playerName);
+  }
+
+  drawCard() {
+    if (this.isMyTurn) this.gameService.drawCard(this.gameState!.gameId, this.playerName);
+  }
 
   get me(): Player | undefined {
     if (!this.gameState) return undefined;
@@ -239,9 +251,31 @@ export class App implements OnInit {
     if (!this.gameState) return undefined;
     return this.gameState.player1.name === this.playerName ? this.gameState.player2 : this.gameState.player1;
   }
-  get isMyTurn(): boolean { return this.gameState?.currentPlayer.name === this.playerName; }
-  respondToInterrupt(choice: boolean) { if (this.gameState) this.gameService.resolveInterrupt(this.gameState.gameId, choice); }
-  leaveGame() { this.gameState = null; this.cancelTargeting(); }
-  createGame(name: string) { if(name) { this.playerName = name; this.gameService.createGame(name); } }
-  joinGame(gameId: string, name: string) { if(name && gameId) { this.playerName = name; this.gameService.joinGame(gameId.toUpperCase(), name); } }
+
+  get isMyTurn(): boolean {
+    return this.gameState?.currentPlayer.name === this.playerName;
+  }
+
+  respondToInterrupt(choice: boolean) {
+    if (this.gameState) this.gameService.resolveInterrupt(this.gameState.gameId, choice);
+  }
+
+  leaveGame() {
+    this.gameState = null;
+    this.cancelTargeting();
+  }
+
+  createGame(name: string) {
+    if (name) {
+      this.playerName = name;
+      this.gameService.createGame(name);
+    }
+  }
+
+  joinGame(gameId: string, name: string) {
+    if (name && gameId) {
+      this.playerName = name;
+      this.gameService.joinGame(gameId.toUpperCase(), name);
+    }
+  }
 }
